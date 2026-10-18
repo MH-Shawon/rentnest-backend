@@ -3,6 +3,7 @@ export interface IPropertyQuery {
 
   location?: string;
   category?: string;
+  landlordId?: string;
 
   minPrice?: string;
   maxPrice?: string;

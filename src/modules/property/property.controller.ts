@@ -14,8 +14,14 @@ const createProperty = catchAsync(async (req: Request, res: Response) => {
         description,
         price,
         location,
+        city,
+        bedrooms,
+        bathrooms,
+        size,
         amenities,
-        categoryId
+        availability,
+        categoryId,
+        images
     } = req.body;
 
     // Manual validation
@@ -56,11 +62,56 @@ const createProperty = catchAsync(async (req: Request, res: Response) => {
         ]);
     }
 
+    if (!city || city.trim() === "") {
+        throw new AppError(400, "Validation Error", [
+            {
+                field: "city",
+                message: "City is required"
+            }
+        ]);
+    }
+
+    if (!Number.isFinite(Number(bedrooms)) || Number(bedrooms) < 0) {
+        throw new AppError(400, "Validation Error", [
+            {
+                field: "bedrooms",
+                message: "Bedrooms is required"
+            }
+        ]);
+    }
+
+    if (!Number.isFinite(Number(bathrooms)) || Number(bathrooms) < 0) {
+        throw new AppError(400, "Validation Error", [
+            {
+                field: "bathrooms",
+                message: "Bathrooms is required"
+            }
+        ]);
+    }
+
+    if (!Number.isFinite(Number(size)) || Number(size) <= 0) {
+        throw new AppError(400, "Validation Error", [
+            {
+                field: "size",
+                message: "Size must be greater than 0"
+            }
+        ]);
+    }
+
     if (!Array.isArray(amenities)) {
         throw new AppError(400, "Validation Error", [
             {
                 field: "amenities",
                 message: "Amenities must be an array"
+            }
+        ]);
+    }
+
+    if (!availability || !["AVAILABLE", "RENTED", "UNAVAILABLE"].includes(availability)) {
+        throw new AppError(400, "Validation Error", [
+            {
+                field: "availability",
+                message: "Availability is required"
             }
         ]);
     }
@@ -81,8 +132,14 @@ const createProperty = catchAsync(async (req: Request, res: Response) => {
             description,
             price,
             location,
+            city,
+            bedrooms: Number(bedrooms),
+            bathrooms: Number(bathrooms),
+            size: Number(size),
             amenities,
-            categoryId
+            availability,
+            categoryId,
+            images: Array.isArray(images) ? images : []
         }
     );
 

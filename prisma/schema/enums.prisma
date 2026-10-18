@@ -16,3 +16,9 @@ enum PaymentStatus {
   COMPLETED
   FAILED
 }
+
+enum PropertyAvailability {
+  AVAILABLE
+  RENTED
+  UNAVAILABLE
+}

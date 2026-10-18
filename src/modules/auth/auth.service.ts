@@ -34,11 +34,15 @@ const registerUser = async (payload: IRegisterUser) => {
       name: true,
       email: true,
       role: true,
+      isBanned: true,
       createdAt: true,
     },
   });
 
-  return result;
+  return {
+    ...result,
+    status: result.isBanned ? "BANNED" : "ACTIVE",
+  };
 };
 
 
@@ -85,7 +89,10 @@ const loginUser = async (payload: {
 
   return {
     accessToken,
-    user: userWithoutPassword,
+    user: {
+      ...userWithoutPassword,
+      status: user.isBanned ? "BANNED" : "ACTIVE",
+    },
   };
 };
 
@@ -109,7 +116,10 @@ const getMe = async (userId: string) => {
     throw new AppError(404, "User not found");
   }
 
-  return user;
+  return {
+    ...user,
+    status: user.isBanned ? "BANNED" : "ACTIVE",
+  };
 };
 
 

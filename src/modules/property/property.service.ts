@@ -10,8 +10,14 @@ const createProperty = async (
         description: string;
         price: number;
         location: string;
+        city: string;
+        bedrooms: number;
+        bathrooms: number;
+        size: number;
         amenities: string[];
+        availability: "AVAILABLE" | "RENTED" | "UNAVAILABLE";
         categoryId: string;
+        images?: string[];
     }
 ) => {
 
@@ -27,8 +33,20 @@ const createProperty = async (
 
     const property = await prisma.property.create({
         data: {
-            ...payload,
-            landlordId
+            title: payload.title,
+            description: payload.description,
+            price: payload.price,
+            location: payload.location,
+            city: payload.city,
+            bedrooms: payload.bedrooms,
+            bathrooms: payload.bathrooms,
+            size: payload.size,
+            amenities: payload.amenities,
+            images: payload.images ?? [],
+            availability: payload.availability,
+            isAvailable: payload.availability === "AVAILABLE",
+            landlordId,
+            categoryId: payload.categoryId,
         },
         include: {
             category: true,
@@ -52,10 +70,13 @@ const getAllProperties = async (query: IPropertyQuery) => {
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-        isAvailable: true
-    };
+    const where: any = {};
 
+    if (query.landlordId) {
+        where.landlordId = query.landlordId;
+    } else {
+        where.isAvailable = true;
+    }
 
     if (query.location) {
         where.location = {
@@ -190,8 +211,13 @@ const updateProperty = async (
     description?: string;
     price?: number;
     location?: string;
+    city?: string;
+    bedrooms?: number;
+    bathrooms?: number;
+    size?: number;
     amenities?: string[];
     images?: string[];
+    availability?: "AVAILABLE" | "RENTED" | "UNAVAILABLE";
     categoryId?: string;
     isAvailable?: boolean;
   }
@@ -248,12 +274,22 @@ const updateProperty = async (
     );
   }
 
+  const normalizedPayload = {
+    ...payload,
+    ...(payload.availability !== undefined
+      ? {
+          isAvailable: payload.availability === "AVAILABLE",
+          availability: payload.availability,
+        }
+      : {}),
+  };
+
   const updatedProperty = await prisma.property.update({
     where: {
       id: propertyId,
     },
 
-    data: payload,
+    data: normalizedPayload,
 
     include: {
       category: true,
