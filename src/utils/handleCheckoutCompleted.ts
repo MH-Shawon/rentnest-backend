@@ -7,27 +7,23 @@ export const handleCheckoutCompleted = async (
 ) => {
 
   const paymentId = session.metadata?.paymentId;
-
-  if (!paymentId) {
-    console.log("Payment id missing.");
-    return;
-  }
-
   const paymentIntentId =
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : session.payment_intent?.id;
 
   await prisma.$transaction(async (tx) => {
-
-    const payment = await tx.payment.findUnique({
+    const payment = await tx.payment.findFirst({
       where: {
-        id: paymentId,
+        OR: [
+          ...(paymentId ? [{ id: paymentId }] : []),
+          { stripeSessionId: session.id },
+        ],
       },
     });
 
     if (!payment) {
-      console.log("Payment not found.");
+      console.log("Payment not found for session:", session.id);
       return;
     }
 
@@ -40,7 +36,8 @@ export const handleCheckoutCompleted = async (
         id: payment.id,
       },
       data: {
-        transactionId: paymentIntentId,
+        transactionId: paymentIntentId ?? payment.transactionId ?? null,
+        stripeSessionId: session.id,
         status: PaymentStatus.COMPLETED,
         paidAt: new Date(),
       },
@@ -52,9 +49,8 @@ export const handleCheckoutCompleted = async (
       },
       data: {
         status: RequestStatus.COMPLETED,
+        completedAt: new Date(),
       },
     });
-
   });
-
 };
